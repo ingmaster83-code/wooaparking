@@ -226,12 +226,15 @@ function renderResults(results, centerLat, centerLon) {
       <div class="result-count">반경 1km 내 <strong>${results.length}개</strong> 공영주차장</div>
     </div>`;
 
-  const cards = results.map((r, i) => {
+  const parts = [];
+  results.forEach((r, i) => {
     addMarker(r, i);
-    return buildCard(r, i);
-  }).join('');
+    parts.push(buildCard(r, i));
+    if ((i + 1) % 10 === 0 && i + 1 < results.length) parts.push(buildInlineAd());
+  });
 
-  area.innerHTML = header + `<div class="parking-list">${cards}</div>`;
+  area.innerHTML = header + `<div class="parking-list">${parts.join('')}</div>`;
+  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
 
   // 카드 클릭 → 마커 클릭 효과
   results.forEach((r, i) => {
@@ -286,6 +289,16 @@ function buildCard(r, index) {
         <a href="${naviUrl}" target="_blank" class="btn-navi" onclick="event.stopPropagation()">길찾기 →</a>
       </div>
     </div>`;
+}
+
+// ── 인라인 광고 ──────────────────────────────────
+function buildInlineAd() {
+  return `<div class="inline-ad">
+    <ins class="adsbygoogle" style="display:block;width:100%;height:90px"
+      data-ad-client="ca-pub-6464921081676309"
+      data-ad-slot="7080296704"
+      data-ad-format="auto" data-full-width-responsive="true"></ins>
+  </div>`;
 }
 
 // ── 로딩 / 에러 상태 ─────────────────────────────
