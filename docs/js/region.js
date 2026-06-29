@@ -36,7 +36,7 @@ function createMapModal() {
       <div class="map-modal-info" id="mapModalInfo"></div>
       <div id="mapModalMap"></div>
       <div class="map-modal-footer">
-        <a id="mapModalNavi" href="#" target="_blank" class="btn-modal-navi">🗺️ 카카오맵 길찾기 →</a>
+        <a id="mapModalNavi" href="#" class="btn-modal-navi">🗺️ 카카오맵 길찾기 →</a>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -119,7 +119,7 @@ function buildInfoWindow(r) {
       ${addr ? `<div class="iw-row">📍 ${addr}</div>` : ''}
       ${fee ? `<div class="iw-row">💰 ${fee}</div>` : ''}
       ${r['주차구획수'] ? `<div class="iw-row">🚗 ${r['주차구획수']}면</div>` : ''}
-      <a href="${naviUrl}" target="_blank" class="iw-link">길찾기 →</a>
+      <a href="${naviUrl}" class="iw-link">길찾기 →</a>
     </div>`;
 }
 
@@ -172,7 +172,7 @@ function buildCard(r, index) {
       </div>
       <div class="card-actions">
         <button class="btn-map" data-index="${index}" onclick="event.stopPropagation()">🗺️ 지도에서 보기</button>
-        ${r['위도'] ? `<a href="${naviUrl}" target="_blank" class="btn-navi" onclick="event.stopPropagation()">길찾기 →</a>` : ''}
+        ${r['위도'] ? `<a href="${naviUrl}" class="btn-navi" onclick="event.stopPropagation()">길찾기 →</a>` : ''}
       </div>
     </div>`;
 }
