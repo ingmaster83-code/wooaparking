@@ -133,6 +133,8 @@ SIDO_TMPL = """\
     </nav>
     <button class="mobile-menu-btn" aria-label="메뉴">☰</button>
   </div>
+
+<script src="../js/wooa-sites-bar.js"></script>
 </header>
 
 <section class="region-hero">
@@ -264,6 +266,8 @@ GU_TMPL = """\
     </nav>
     <button class="mobile-menu-btn" aria-label="메뉴">☰</button>
   </div>
+
+<script src="../../js/wooa-sites-bar.js"></script>
 </header>
 
 <section class="region-hero">
@@ -394,6 +398,8 @@ DONG_TMPL = """\
     </nav>
     <button class="mobile-menu-btn" aria-label="메뉴">☰</button>
   </div>
+
+<script src="../../../js/wooa-sites-bar.js"></script>
 </header>
 
 <section class="region-hero">

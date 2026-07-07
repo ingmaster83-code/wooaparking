@@ -116,6 +116,8 @@ REGION_PAGE_TEMPLATE = """\
   </div>
 </header>
 
+<script src="../js/wooa-sites-bar.js"></script>
+
 <!-- 히어로 -->
 <section class="region-hero">
   <nav class="breadcrumb-hero">
