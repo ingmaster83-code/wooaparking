@@ -16,6 +16,7 @@ import os
 import shutil
 from datetime import date
 from pathlib import Path
+from urllib.parse import quote
 
 try:
     from jinja2 import Environment, BaseLoader
@@ -69,6 +70,73 @@ SIDO_CENTER = {
     "경상남도":      (35.4606, 128.2132),
     "제주특별자치도": (33.4890, 126.4983),
 }
+
+# ── 카드 SSR (검색엔진·JS 로드 전 사용자에게 실제 콘텐츠 노출용) ──
+# JS(region.js)가 로드되면 renderList()가 즉시 동일한 카드로 다시 그리므로 실사용에는 영향 없음.
+SSR_CARD_COUNT = 20
+
+def _fee_text(r):
+    if r.get('요금정보') == '무료':
+        return '무료'
+    base = r.get('주차기본요금')
+    time_ = r.get('주차기본시간')
+    if not base or str(base) in ('0', ''):
+        return '무료'
+    try:
+        base_fmt = f"{int(base):,}"
+    except (ValueError, TypeError):
+        base_fmt = str(base)
+    if time_:
+        return f"{time_}분 {base_fmt}원"
+    return f"{base_fmt}원"
+
+
+def _hours_text(r):
+    s, e = r.get('평일운영시작시각'), r.get('평일운영종료시각')
+    if not s and not e:
+        return ''
+    if s == '00:00' and e == '23:59':
+        return '24시간'
+    return f"{s or '?'} ~ {e or '?'}"
+
+
+def _parking_card_html(r):
+    name = r.get('주차장명') or '주차장'
+    addr = r.get('소재지도로명주소') or r.get('소재지지번주소') or ''
+    yuhyung = r.get('주차장유형') or ''
+    gubun = r.get('주차장구분') or ''
+    badge_class = '노상' if yuhyung == '노상' else ('노외' if yuhyung == '노외' else '부설')
+    base_fee = r.get('주차기본요금')
+    is_free = r.get('요금정보') == '무료' or not base_fee or str(base_fee) in ('0', '')
+    fee = _fee_text(r)
+    fee_badge = '<span class="badge badge-free">무료</span>' if is_free else '<span class="badge badge-paid">유료</span>'
+    hours = _hours_text(r)
+    spaces = r.get('주차구획수')
+    lat, lon = r.get('위도'), r.get('경도')
+    navi_url = f"https://map.kakao.com/link/to/{quote(str(name))},{lat},{lon}" if lat else '#'
+
+    return f"""<div class="parking-card">
+  <div class="card-top"><div class="card-name">{name}</div></div>
+  <div class="badge-row">
+    {f'<span class="badge badge-{badge_class}">{yuhyung}주차장</span>' if yuhyung else ''}
+    {f'<span class="badge badge-type">{gubun}</span>' if gubun else ''}
+    {fee_badge}
+  </div>
+  <div class="card-info">
+    {f'<div class="card-row"><span class="ci">📍</span><span>{addr}</span></div>' if addr else ''}
+    {f'<div class="card-row"><span class="ci">⏰</span><span>평일 {hours}</span></div>' if hours else ''}
+    <div class="card-row"><span class="ci">💰</span><span>{fee}</span></div>
+    {f'<div class="card-row"><span class="ci">🚗</span><span>총 {spaces}면</span></div>' if spaces else ''}
+  </div>
+  <div class="card-actions">
+    {f'<a href="{navi_url}" class="btn-navi">길찾기 →</a>' if lat else ''}
+  </div>
+</div>"""
+
+
+def _ssr_cards(records):
+    return "".join(_parking_card_html(r) for r in records[:SSR_CARD_COUNT])
+
 
 REGION_PAGE_TEMPLATE = """\
 <!DOCTYPE html>
@@ -159,9 +227,7 @@ REGION_PAGE_TEMPLATE = """\
       <div class="result-count">총 <strong id="listCount">{{ count }}</strong>개</div>
       <a href="../" class="result-back">← 전국 검색</a>
     </div>
-    <div id="parkingList">
-      <div class="loading-state"><div class="spinner"></div><br>불러오는 중...</div>
-    </div>
+    <div id="parkingList">{{ initial_cards }}</div>
     <div id="loadMore" style="text-align:center;margin:20px 0;display:none;">
       <button id="loadMoreBtn" style="padding:10px 28px;background:var(--primary);color:#fff;border-radius:8px;font-size:.9rem;font-weight:600;">더 보기</button>
     </div>
@@ -306,6 +372,7 @@ def generate_region_pages():
             center_lat=center[0],
             center_lon=center[1],
             kakao_key=KAKAO_APP_KEY,
+            initial_cards=_ssr_cards(data.get("records", [])),
         )
 
         out_path = PAGES_DIR / f"{sido}.html"
