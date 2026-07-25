@@ -234,7 +234,9 @@ function renderResults(results, centerLat, centerLon) {
   });
 
   area.innerHTML = header + `<div class="parking-list">${parts.join('')}</div>`;
-  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+  area.querySelectorAll('ins.adsbygoogle').forEach(() => {
+    try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
+  });
 
   // 카드 클릭 → 마커 클릭 효과
   results.forEach((r, i) => {
