@@ -503,6 +503,9 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   padding: 12px 20px; background: var(--bg);
   font-size: .84rem; color: var(--text-muted); flex-shrink: 0;
 }
+.map-modal-ad {
+  padding: 8px 20px; flex-shrink: 0;
+}
 #mapModalMap {
   width: 100%; height: 380px; flex-shrink: 0;
 }

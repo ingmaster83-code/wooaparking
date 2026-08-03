@@ -46,6 +46,12 @@ function createMapModal() {
         <button class="map-modal-close" id="mapModalClose">✕</button>
       </div>
       <div class="map-modal-info" id="mapModalInfo"></div>
+      <div class="map-modal-ad">
+        <ins class="adsbygoogle" style="display:block;width:100%;height:90px"
+          data-ad-client="ca-pub-6464921081676309"
+          data-ad-slot="7080296704"
+          data-ad-format="auto" data-full-width-responsive="true"></ins>
+      </div>
       <div id="mapModalMap"></div>
       <div class="map-modal-footer">
         <a id="mapModalNavi" href="#" class="btn-modal-navi">🗺️ 카카오맵 길찾기 →</a>
@@ -56,6 +62,8 @@ function createMapModal() {
   document.getElementById('mapModalClose').addEventListener('click', closeMapModal);
   modal.querySelector('.map-modal-backdrop').addEventListener('click', closeMapModal);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMapModal(); });
+
+  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
 }
 
 function openMapModal(r) {

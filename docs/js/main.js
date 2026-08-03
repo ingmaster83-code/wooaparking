@@ -238,7 +238,7 @@ function renderResults(results, centerLat, centerLon) {
     try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
   });
 
-  // 카드 클릭 → 마커 클릭 효과
+  // 카드 클릭 → 상단 개요 지도에서 마커 위치로 이동
   results.forEach((r, i) => {
     const card = document.getElementById(`card-${i}`);
     if (!card) return;
@@ -250,6 +250,15 @@ function renderResults(results, centerLat, centerLon) {
         infowindow.setContent(buildInfoWindowContent(r));
         infowindow.open(map, markers[i]);
       }
+    });
+  });
+
+  // 지도에서 보기 → 해당 주차장 전용 지도 모달
+  area.querySelectorAll('.btn-map').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index, 10);
+      openMapModal(results[idx]);
     });
   });
 }
@@ -287,10 +296,104 @@ function buildCard(r, index) {
         ${spaces ? `<div class="card-row"><span class="icon">🚗</span><span>총 ${spaces}면</span></div>` : ''}
       </div>
       <div class="card-actions">
-        <span class="btn-map">🗺️ 지도에서 보기</span>
+        <button class="btn-map" data-index="${index}" onclick="event.stopPropagation()">🗺️ 지도에서 보기</button>
         <a href="${naviUrl}" target="_blank" class="btn-navi" onclick="event.stopPropagation()">길찾기 →</a>
       </div>
     </div>`;
+}
+
+// ── 지도 모달 (개별 주차장 지도 보기) ────────────
+let modalMap = null;
+let modalInfowindow = null;
+
+function createMapModal() {
+  if (document.getElementById('mapModal')) return;
+  const modal = document.createElement('div');
+  modal.id = 'mapModal';
+  modal.innerHTML = `
+    <div class="map-modal-backdrop"></div>
+    <div class="map-modal-box">
+      <div class="map-modal-header">
+        <div class="map-modal-title" id="mapModalTitle"></div>
+        <button class="map-modal-close" id="mapModalClose">✕</button>
+      </div>
+      <div class="map-modal-info" id="mapModalInfo"></div>
+      <div class="map-modal-ad">
+        <ins class="adsbygoogle" style="display:block;width:100%;height:90px"
+          data-ad-client="ca-pub-6464921081676309"
+          data-ad-slot="7080296704"
+          data-ad-format="auto" data-full-width-responsive="true"></ins>
+      </div>
+      <div id="mapModalMap"></div>
+      <div class="map-modal-footer">
+        <a id="mapModalNavi" href="#" class="btn-modal-navi">🗺️ 카카오맵 길찾기 →</a>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  document.getElementById('mapModalClose').addEventListener('click', closeMapModal);
+  modal.querySelector('.map-modal-backdrop').addEventListener('click', closeMapModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMapModal(); });
+
+  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
+}
+
+function openMapModal(r) {
+  createMapModal();
+  const name = r['주차장명'] || '주차장';
+  const addr = r['소재지도로명주소'] || r['소재지지번주소'] || '';
+  const fee = buildFeeText(r);
+  const hours = buildHoursText(r);
+  const spaces = r['주차구획수'];
+  const lat = r['위도'], lon = r['경도'];
+
+  document.getElementById('mapModalTitle').textContent = name;
+  document.getElementById('mapModalInfo').innerHTML = `
+    ${addr ? `<span>📍 ${addr}</span>` : ''}
+    <span>💰 ${fee}</span>
+    ${hours ? `<span>⏰ 평일 ${hours}</span>` : ''}
+    ${spaces ? `<span>🚗 ${spaces}면</span>` : ''}`;
+
+  const naviUrl = lat
+    ? `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lon}`
+    : `https://map.kakao.com/link/search/${encodeURIComponent(name)}`;
+  document.getElementById('mapModalNavi').href = naviUrl;
+
+  document.getElementById('mapModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  if (kakaoLoaded && lat && lon) {
+    setTimeout(() => initModalMap(r), 50);
+  } else {
+    document.getElementById('mapModalMap').innerHTML =
+      '<div class="map-no-coord">📍 좌표 정보가 없어 지도를 표시할 수 없습니다.</div>';
+  }
+}
+
+function initModalMap(r) {
+  const container = document.getElementById('mapModalMap');
+  container.innerHTML = '';
+  const lat = parseFloat(r['위도']);
+  const lng = parseFloat(r['경도']);
+  const pos = new kakao.maps.LatLng(lat, lng);
+
+  modalMap = new kakao.maps.Map(container, { center: pos, level: 4 });
+  modalInfowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+
+  const marker = new kakao.maps.Marker({ map: modalMap, position: pos });
+  modalInfowindow.setContent(buildInfoWindowContent(r));
+  modalInfowindow.open(modalMap, marker);
+}
+
+function closeMapModal() {
+  const modal = document.getElementById('mapModal');
+  if (modal) modal.classList.remove('open');
+  document.body.style.overflow = '';
+  if (modalMap) {
+    modalMap = null;
+    const container = document.getElementById('mapModalMap');
+    if (container) container.innerHTML = '';
+  }
 }
 
 // ── 인라인 광고 ──────────────────────────────────
