@@ -2,6 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /scripts/
 
+User-agent: Daum
+Allow: /
+
 Sitemap: https://wooaparking.wooahouse.com/sitemap.xml
 
 #DaumWebMasterTool:b126b2a161fd667c156eb5e865934cb053f6e5a0db0d576992ea1641fdac0a5d:5OHFs/qHHlfCvAas17iLzw==
